@@ -1,4 +1,4 @@
-# Readme: TRPCA
+#TRPCA
 
 ## Run in Google Colab
 Access the notebook [here](https://drive.google.com/file/d/1HoLVNs7WaQwUKwb-KLntuEz1Nq9gCYEg/view?usp=sharing).
