@@ -57,6 +57,7 @@ rpca_results = rpca(rare_table.rarefied_table, n_components=n_dimensions, min_fe
 # Convert the biplot results to a DataFrame
 df = rpca_results.biplot.view(q2.Metadata).to_dataframe()
 
+```
 
 
 ## Parameters
