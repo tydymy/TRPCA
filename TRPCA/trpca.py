@@ -1,12 +1,12 @@
 import math
 import torch
 import torch.nn as nn
-from TRPCA import utils
+from TRPCA.TRPCA import utils
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import TensorDataset, DataLoader
-from TRPCA import trpca
+from TRPCA.TRPCA import trpca
 from tqdm import tqdm 
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, r2_score
