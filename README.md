@@ -1,7 +1,7 @@
 #TRPCA
 
 ## Run in Google Colab
-Access the notebook [here](https://drive.google.com/file/d/1HoLVNs7WaQwUKwb-KLntuEz1Nq9gCYEg/view?usp=sharing).
+Access the notebook [here]([https://drive.google.com/file/d/1HoLVNs7WaQwUKwb-KLntuEz1Nq9gCYEg/view?usp=sharing](https://colab.research.google.com/drive/1XfSXCgnnrLq-FxiLTRVTDME458IyRDu-?usp=sharing)).
 
 ## Input/Output
 **Input:** `pd.DataFrame`, `pd.Series`
