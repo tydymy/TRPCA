@@ -33,6 +33,32 @@ Access the notebook [here](https://drive.google.com/file/d/1HoLVNs7WaQwUKwb-KLnt
 - Compatible with qiime2 environment with Gemelli installed for RPCA.
 - Apple Silicon Macs: MPS compatible PyTorch install may break qiime2 environment. This issue might not occur with CPU-only or CUDA-enabled devices.
 
+## RPCA Analysis (rather than utils.clr_transformation and utils.apply_pca)
+
+This section details the process of performing Robust Principal Component Analysis (RPCA) using `qiime2` and the `gemelli` plugin.
+
+```python
+import qiime2 as q2
+from qiime2.plugins.feature_table.methods import rarefy
+from qiime2.plugins.gemelli.actions import rpca
+
+# Load the data
+table = q2.Artifact.load('data/skin_1975.qza')
+
+# Rarefy the table to a uniform depth
+rare_table = rarefy(table=table, sampling_depth=1000)
+
+# Define the number of dimensions for RPCA
+n_dimensions = 8
+
+# Execute RPCA
+rpca_results = rpca(rare_table.rarefied_table, n_components=n_dimensions, min_feature_frequency=5)
+
+# Convert the biplot results to a DataFrame
+df = rpca_results.biplot.view(q2.Metadata).to_dataframe()
+
+
+
 ## Parameters
 ### Descriptions and Recommended Values
 | Parameter             | Description                                      | Recommended Values                               |
