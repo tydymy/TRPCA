@@ -89,7 +89,7 @@ class TransformerClassificationModel(TransformerRegressionModel):
 # Function to perform regression analysis using the Transformer model.
 def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000):
     df1 = preprocess_data(table, metadata, MetadataColumn, feature_frequency)
-    df1, X_pca_tensor = pca_and_tensor(df1, n_dimensions)
+    df1, X_pca_tensor = pca_and_tensor(df1, n_dimensions, MetadataColumn)
     y = df1[MetadataColumn].astype(float)
     train_loader, test_loader = prepare_data_loaders(X_pca_tensor, y, test_size)
     regression_model = fit_transformer_regression(train_loader, test_loader, n_dimensions, num_transformer_layers, nhead, dim_feedforward, epochs)
@@ -99,7 +99,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
 # Function to perform classification analysis using the Transformer model.
 def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000):
     df2 = preprocess_data(table, metadata, MetadataColumn, feature_frequency)
-    df2, X_pca_tensor = pca_and_tensor(df2, n_dimensions)
+    df2, X_pca_tensor = pca_and_tensor(df2, n_dimensions, MetadataColumn)
     y = df2[MetadataColumn].astype('category').cat.codes
     train_loader, test_loader = prepare_data_loaders(X_pca_tensor, y, test_size, classification=True)
     classification_model = fit_transformer_classification(train_loader, test_loader, n_dimensions, len(y.unique()), num_transformer_layers, nhead, dim_feedforward, epochs)
@@ -118,7 +118,7 @@ def preprocess_data(table, metadata, MetadataColumn, feature_frequency):
     df = df.loc[df[MetadataColumn].notna()]
     return df
 
-def pca_and_tensor(df, n_dimensions):
+def pca_and_tensor(df, n_dimensions, MetadataColumn):
     # Apply PCA and convert to DataFrame
     X_reduced, pca = utils.apply_pca(df.drop(columns=MetadataColumn), n_dimensions)
     df_pca = pd.DataFrame(X_reduced, index=df.index)
