@@ -388,7 +388,7 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
     plt.ylabel('PC2')
 
     # Show legend and plot
-    plt.legend(title='Qiita Host Sex')
+    plt.legend(title=MetadataColumn)
     plt.show()
 
     # Assuming 'df' is your DataFrame and 'sex' is the binary classification target
