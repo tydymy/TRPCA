@@ -253,7 +253,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
 
     # Loss function and optimizer
     criterion = nn.HuberLoss()
-    optimizer = torch.optim.SGD(regression_model.parameters(), lr=8e-5, weight_decay=0.1)
+    optimizer = torch.optim.SGD(regression_model.parameters(), lr=8e-5)#, weight_decay=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0, last_epoch=-1)
 
     epochs = epochs
@@ -440,7 +440,7 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
 
     # Set up loss function and optimizer
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(classification_model.parameters(), lr=8e-5, weight_decay=0.1)
+    optimizer = torch.optim.SGD(classification_model.parameters(), lr=8e-5)#, weight_decay=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0, last_epoch=-1)
 
     epochs = epochs
