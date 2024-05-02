@@ -1,4 +1,7 @@
-#TRPCA
+# TRPCA
+## In progress:
+- Additional parameters for input: learning rate, batch size, etc.
+- Feature extraction for model predictions in a similar format to Qurro.
 
 ## Run in Google Colab
 Access the notebook [here](https://colab.research.google.com/drive/1XfSXCgnnrLq-FxiLTRVTDME458IyRDu-?usp=sharing).
