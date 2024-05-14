@@ -207,6 +207,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
         df = pd.DataFrame(X1_reduced, index=df1.index)
     else:
         n_dimensions = table.shape[1]
+        df = table
     df[MetadataColumn] = metadata.loc[metadata.index.isin(df.index)][MetadataColumn]
     df = df.loc[df[MetadataColumn].notna()]
 
@@ -382,6 +383,7 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
         df = pd.DataFrame(X2_reduced, index=df2.index)
     else:
         n_dimensions = table.shape[1]
+        df = table
     df[MetadataColumn] = metadata[MetadataColumn]
     df.dropna(subset=[MetadataColumn], inplace=True)
 
