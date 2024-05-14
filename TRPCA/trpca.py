@@ -195,15 +195,18 @@ class TransformerClassificationModel(nn.Module):
 
         return outputs
     
-def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512):
-    columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
-    df1 = table.drop(columns=columns_to_drop)
-    df1 = utils.clr_transformation(df1)
-    print('CLR Transformed.')
-    n_dimensions = n_dimensions
-    # # # # # # Preprocess with PCA (Re-using the PCA application code from earlier)
-    X1_reduced, pca1 = utils.apply_pca(df1, n_dimensions) 
-    df = pd.DataFrame(X1_reduced, index=df1.index)
+def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, transform_df=True):
+    if transform_df:
+        columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
+        df1 = table.drop(columns=columns_to_drop)
+        df1 = utils.clr_transformation(df1)
+        print('CLR Transformed.')
+        n_dimensions = n_dimensions
+        # # # # # # Preprocess with PCA (Re-using the PCA application code from earlier)
+        X1_reduced, pca1 = utils.apply_pca(df1, n_dimensions) 
+        df = pd.DataFrame(X1_reduced, index=df1.index)
+    else:
+        n_dimensions = table.shape[1]
     df[MetadataColumn] = metadata.loc[metadata.index.isin(df.index)][MetadataColumn]
     df = df.loc[df[MetadataColumn].notna()]
 
@@ -211,7 +214,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
 
     X_pca_tensor = torch.tensor(df.drop(columns=MetadataColumn).to_numpy(), dtype=torch.float32)
 
-    num_bins = 10
+    num_bins = 5
 
     # Binning the targets
     regression_bins = pd.qcut(y, q=num_bins, labels=False, duplicates='drop')
@@ -366,16 +369,19 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     plt.legend()
     plt.show()
 
-def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512):
-    columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
-    df2 = table.drop(columns=columns_to_drop)
-    df2 = utils.clr_transformation(df2)
-    print('CLR Transformed.')
-
-    n_dimensions = n_dimensions
-    # # # # # # Preprocess with PCA (Re-using the PCA application code from earlier)
-    X2_reduced, pca1 = utils.apply_pca(df2, n_dimensions) 
-    df = pd.DataFrame(X2_reduced, index=df2.index)
+def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, transform_df=True):
+    if transform_df:
+        columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
+        df2 = table.drop(columns=columns_to_drop)
+        df2 = utils.clr_transformation(df2)
+        print('CLR Transformed.')
+    
+        n_dimensions = n_dimensions
+        # # # # # # Preprocess with PCA (Re-using the PCA application code from earlier)
+        X2_reduced, pca1 = utils.apply_pca(df2, n_dimensions) 
+        df = pd.DataFrame(X2_reduced, index=df2.index)
+    else:
+        n_dimensions = table.shape[1]
     df[MetadataColumn] = metadata[MetadataColumn]
     df.dropna(subset=[MetadataColumn], inplace=True)
 
