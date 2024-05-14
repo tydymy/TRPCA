@@ -195,7 +195,7 @@ class TransformerClassificationModel(nn.Module):
 
         return outputs
     
-def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000):
+def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512):
     columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
     df1 = table.drop(columns=columns_to_drop)
     df1 = utils.clr_transformation(df1)
@@ -211,7 +211,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
 
     X_pca_tensor = torch.tensor(df.drop(columns=MetadataColumn).to_numpy(), dtype=torch.float32)
 
-    num_bins = 7
+    num_bins = 10
 
     # Binning the targets
     regression_bins = pd.qcut(y, q=num_bins, labels=False, duplicates='drop')
@@ -234,7 +234,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     train_dataset = TensorDataset(train_features, train_targets)
     test_dataset = TensorDataset(test_features, test_targets)
 
-    batch_size = 512 # You can adjust the batch size
+    batch_size = batch_size # You can adjust the batch size
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -253,7 +253,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
 
     # Loss function and optimizer
     criterion = nn.HuberLoss()
-    optimizer = torch.optim.SGD(regression_model.parameters(), lr=8e-4)#, weight_decay=0.1)
+    optimizer = torch.optim.SGD(regression_model.parameters(), lr=learning_rate)#, weight_decay=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0, last_epoch=-1)
 
     epochs = epochs
@@ -366,7 +366,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     plt.legend()
     plt.show()
 
-def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000):
+def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512):
     columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
     df2 = table.drop(columns=columns_to_drop)
     df2 = utils.clr_transformation(df2)
@@ -414,7 +414,7 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
     train_dataset = TensorDataset(train_features, train_targets)
     test_dataset = TensorDataset(test_features, test_targets)
 
-    batch_size = 512  # You can adjust the batch size
+    batch_size = batch_size  # You can adjust the batch size
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -440,7 +440,7 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
 
     # Set up loss function and optimizer
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(classification_model.parameters(), lr=8e-4)#, weight_decay=0.1)
+    optimizer = torch.optim.SGD(classification_model.parameters(), lr=learning_rate)#, weight_decay=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0, last_epoch=-1)
 
     epochs = epochs
