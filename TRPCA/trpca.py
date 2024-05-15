@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import TensorDataset, DataLoader
 from TRPCA.TRPCA import trpca
-from tqdm import tqdm 
+from tqdm.notebook import tqdm 
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, r2_score
 import seaborn as sns
