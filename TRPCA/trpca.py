@@ -266,7 +266,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     valid_losses = []
     pbar = tqdm(total=epochs, desc="Training Progress")
     device = torch.device('cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu'))
-    for epoch in tqdm(range(epochs), total=epochs):
+    for epoch in range(epochs):#tqdm(range(epochs), total=epochs):
         regression_model.to(device)
         regression_model.train()
         train_loss = 0
