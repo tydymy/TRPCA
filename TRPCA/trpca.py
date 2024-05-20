@@ -256,7 +256,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     print(f"Trainable Parameters: {trainable_params}")
 
     # Loss function and optimizer
-    criterion = nn.L1Loss()#nn.HuberLoss()
+    criterion = nn.HuberLoss()
     optimizer = torch.optim.SGD(regression_model.parameters(), lr=learning_rate)#, weight_decay=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0, last_epoch=-1)
 
