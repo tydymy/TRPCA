@@ -81,27 +81,28 @@ class TransformerRegressionModel(nn.Module):
             # Squeeze the sequence length dimension and pass through the regression head
             output = attention_output.squeeze(0)
         else:
-            # Second forward path for fast=False
-            # Reshape the input to add a feature dimension
-            src = src.unsqueeze(-1)  # Shape becomes [batch_size, seq_length, 1]
-
+            # Corrected forward path for fast=False
+            # Reshape the input to add a feature dimension properly
+            src = src.unsqueeze(1)  # Shape becomes [batch_size, 1, feature_size]
+        
             # Scale the embeddings according to the embedding dimension
             src = src * math.sqrt(self.d_model)
-
+        
             # Transpose to match the transformer's expected input shape [seq_len, batch_size, feature_size]
             src = src.transpose(0, 1)
-
+        
             # Add positional encoding
             src = self.positional_encoding(src)
-
+        
             # Pass through Transformer Encoder
             transformer_output = self.transformer_encoder(src)
-
+        
             # Attention layer
             attention_output, attention_weights = self.attention(transformer_output, transformer_output, transformer_output)
-
+        
             # Squeeze the sequence length dimension and pass through the regression head
-            output = attention_output[-1]
+            output = attention_output.squeeze(0)
+
 
         regression_output = self.regressor(output)
 
@@ -163,26 +164,27 @@ class TransformerClassificationModel(nn.Module):
             # Squeeze the sequence length dimension and pass through the classification head
             output = attention_output.squeeze(0)
         else:
-            # Detailed path (Assume src shape is [batch_size, seq_length])
-            src = src.unsqueeze(-1)  # Add a feature dimension
-            
+            # Corrected forward path for fast=False
+            # Reshape the input to add a feature dimension properly
+            src = src.unsqueeze(1)  # Shape becomes [batch_size, 1, feature_size]
+        
             # Scale the embeddings according to the embedding dimension
             src = src * math.sqrt(self.d_model)
-            
+        
             # Transpose to match the transformer's expected input shape [seq_len, batch_size, feature_size]
             src = src.transpose(0, 1)
-            
+        
             # Add positional encoding
             src = self.positional_encoding(src)
-            
+        
             # Pass through Transformer Encoder
             transformer_output = self.transformer_encoder(src)
-            
+        
             # Attention layer
             attention_output, attention_weights = self.attention(transformer_output, transformer_output, transformer_output)
-            
-            # Use the last output of the sequence to pass to the classifier
-            output = attention_output[-1]
+        
+            # Squeeze the sequence length dimension and pass through the regression head
+            output = attention_output.squeeze(0)
 
         class_output = self.classifier(output)
 
