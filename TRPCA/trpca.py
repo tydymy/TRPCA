@@ -369,6 +369,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     plt.ylabel('Predictions')
     plt.legend()
     plt.show()
+    return train_mae, test_mae, best_valid_loss
 
 def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, transform_df=True):
     if transform_df:
