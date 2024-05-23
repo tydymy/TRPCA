@@ -197,7 +197,7 @@ class TransformerClassificationModel(nn.Module):
 
         return outputs
     
-def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, transform_df=True):
+def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, dropout=0.2, transform_df=True):
     if transform_df:
         columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
         df1 = table.drop(columns=columns_to_drop)
@@ -248,7 +248,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
                                                         num_transformer_layers=num_transformer_layers, 
                                                         nhead=nhead, 
                                                         dim_feedforward=dim_feedforward, 
-                                                        dropout=0.2, 
+                                                        dropout=dropout, 
                                                         fast_transformer=True)
     # Calculate the number of parameters
     total_params = sum(p.numel() for p in regression_model.parameters())
