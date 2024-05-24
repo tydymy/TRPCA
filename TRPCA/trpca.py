@@ -223,7 +223,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     regression_bins = pd.qcut(y, q=num_bins, labels=False, duplicates='drop')
 
     # Splitting the dataset
-    X_train, X_test, y_train, y_test = train_test_split(X_pca_tensor, y, test_size=test_size, random_state=42, stratify=regression_bins)
+    X_train, X_test, y_train, y_test = train_test_split(X_pca_tensor, y, test_size=test_size, random_state=42)#, stratify=regression_bins)
 
     # Standardizing the data
     scaler = StandardScaler()
@@ -258,7 +258,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     print(f"Trainable Parameters: {trainable_params}")
 
     # Loss function and optimizer
-    criterion = nn.HuberLoss()
+    criterion = nn.MSELoss()#nn.HuberLoss()
     optimizer = torch.optim.SGD(regression_model.parameters(), lr=learning_rate)#, weight_decay=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0, last_epoch=-1)
 
