@@ -203,6 +203,9 @@ class TransformerClassificationModel(nn.Module):
     
 def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, dropout=0.2, transform_df=True):
     if transform_df:
+        table[MetadataColumn] = metadata.loc[metadata.index.isin(table.index)][MetadataColumn]
+        table = table.loc[df[MetadataColumn].notna()]
+        table = table.drop(columns=[MetadataColumn])
         columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
         df1 = table.drop(columns=columns_to_drop)
         df1 = utils.clr_transformation(df1)
