@@ -11,7 +11,7 @@ from tqdm.notebook import tqdm
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, r2_score
 import seaborn as sns
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, f1_score
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -377,7 +377,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     plt.show()
     return train_mae, test_mae, best_valid_loss
 
-def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, transform_df=True):
+def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, dropout=0.2, transform_df=True):
     if transform_df:
         columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
         df2 = table.drop(columns=columns_to_drop)
@@ -439,7 +439,7 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
                                                                 num_transformer_layers=num_transformer_layers, 
                                                                 nhead=nhead, 
                                                                 dim_feedforward=dim_feedforward, 
-                                                                dropout=0.2, 
+                                                                dropout=dropout, 
                                                                 fast_transformer=True)
     # Calculate the number of parameters
     total_params = sum(p.numel() for p in classification_model.parameters())
@@ -547,6 +547,8 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
     # Calculate accuracy for training and testing sets
     train_accuracy = accuracy_score(train_actuals, train_preds)
     test_accuracy = accuracy_score(test_actuals, test_preds)
+    train_f1 = f1_score(train_actuals, train_preds)
+    test_f1 = f1_score(test_actuals, test_preds)
 
     # Generate confusion matrices for training and testing sets
     train_cm = confusion_matrix(train_actuals, train_preds)
@@ -568,3 +570,4 @@ def trpca_classify(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=
 
     plt.tight_layout()
     plt.show()
+    return train_f1, test_f1, best_valid_loss
