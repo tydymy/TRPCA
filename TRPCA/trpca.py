@@ -51,10 +51,14 @@ class TransformerRegressionModel(nn.Module):
         # Multi-head Attention
         self.attention = nn.MultiheadAttention(embed_dim=feature_size, num_heads=nhead)
         
+        # Batch Normalization
+        self.batch_norm = nn.BatchNorm1d(feature_size)
+        
         # Regression head
         self.regressor = nn.Sequential(
             nn.Linear(feature_size, hidden_layer_size),
             nn.ReLU(),
+            nn.Dropout(dropout),  # Dropout layer for regularization
             nn.Linear(hidden_layer_size, 1)
         )
 
