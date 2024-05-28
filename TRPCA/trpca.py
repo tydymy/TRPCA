@@ -230,13 +230,13 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     X_train, X_test, y_train, y_test = train_test_split(X_pca_tensor, y, test_size=test_size, random_state=42)#, stratify=regression_bins)
 
     # Standardizing the data
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    # scaler = StandardScaler()
+    # X_train_scaled = scaler.fit_transform(X_train)
+    # X_test_scaled = scaler.transform(X_test)
 
     # Converting to PyTorch tensors
-    train_features = torch.tensor(X_train_scaled, dtype=torch.float32)
-    test_features = torch.tensor(X_test_scaled, dtype=torch.float32)
+    train_features = torch.tensor(X_train, dtype=torch.float32)
+    test_features = torch.tensor(X_test, dtype=torch.float32)
     train_targets = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
     test_targets = torch.tensor(y_test, dtype=torch.float32).unsqueeze(1)
 
