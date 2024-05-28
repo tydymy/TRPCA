@@ -138,7 +138,7 @@ class TransformerClassificationModel(nn.Module):
         
         # Multi-head Attention
         self.attention = nn.MultiheadAttention(embed_dim=feature_size, num_heads=nhead)
-        
+        self.batch_norm = nn.BatchNorm1d(feature_size)
         # Classification head
         self.classifier = nn.Sequential(
             nn.Linear(feature_size, hidden_layer_size),
