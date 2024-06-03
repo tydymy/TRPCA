@@ -210,7 +210,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     df1 = table.drop(columns=columns_to_drop)
     df = utils.clr_transformation(df1)
     print('CLR Transformed.')
-    feat_size = df1.shape[1]
+    feat_size = df1.shape[1]-1
     df[MetadataColumn] = metadata.loc[metadata.index.isin(df.index)][MetadataColumn]
     df = df.loc[df[MetadataColumn].notna()]
 
