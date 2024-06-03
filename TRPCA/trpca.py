@@ -209,6 +209,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
     df1 = table.drop(columns=columns_to_drop)
     df1 = utils.clr_transformation(df1)
+    df = df1.copy()
     print('CLR Transformed.')
     feat_size = df1.shape[1]
     df[MetadataColumn] = metadata.loc[metadata.index.isin(df1.index)][MetadataColumn]
