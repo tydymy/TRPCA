@@ -246,7 +246,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     regression_model = trpca.TransformerRegressionModel(feature_size=feat_size, 
-                                                        n_dimensions=n_dimensions, 
+                                                        autoencoder_hidden_size=n_dimensions, 
                                                         num_transformer_layers=num_transformer_layers, 
                                                         nhead=nhead, 
                                                         dim_feedforward=dim_feedforward, 
