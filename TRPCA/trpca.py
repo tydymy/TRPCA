@@ -13,6 +13,30 @@ from sklearn.metrics import mean_absolute_error, r2_score
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, f1_score
 
+class SparseAutoencoder(nn.Module):
+    def __init__(self, input_size, hidden_size, sparsity_penalty=1e-3):
+        super(SparseAutoencoder, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(),
+            nn.Dropout(0.4)  # Dropout for regularization
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(hidden_size, input_size),
+            nn.Sigmoid()
+        )
+        self.sparsity_penalty = sparsity_penalty
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return encoded, decoded
+
+    def sparsity_loss(self, encoded):
+        rho_hat = torch.mean(encoded, dim=0)
+        rho = torch.tensor(0.05).to(encoded.device)
+        return self.sparsity_penalty * torch.sum(rho * torch.log(rho / rho_hat) + (1 - rho) * torch.log((1 - rho) / (1 - rho_hat)))
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
         super(PositionalEncoding, self).__init__()
@@ -33,10 +57,10 @@ class PositionalEncoding(nn.Module):
         return x
   
 class TransformerRegressionModel(nn.Module):
-    def __init__(self, feature_size, num_transformer_layers=6, nhead=8, dim_feedforward=2048, dropout=0.4, hidden_layer_size=1024, fast_transformer=True):
+    def __init__(self, feature_size, num_transformer_layers=6, nhead=8, dim_feedforward=2048, dropout=0.4, hidden_layer_size=1024, autoencoder_hidden_size=256):
         super(TransformerRegressionModel, self).__init__()
         self.d_model = feature_size
-        self.fast_transformer = fast_transformer
+        self.autoencoder = SparseAutoencoder(input_size=feature_size, hidden_size=autoencoder_hidden_size)
         # Positional Encoding
         self.positional_encoding = PositionalEncoding(d_model=feature_size)
         
@@ -63,50 +87,27 @@ class TransformerRegressionModel(nn.Module):
         )
 
     def forward(self, src, return_embeddings=True, return_attention=True):
-        if self.fast_transformer:
-            # First forward path for fast=True
-            # src shape is expected to be [batch_size, feature_size]
-            src = src.unsqueeze(1)  # Add a sequence length dimension
-            d_model = src.size(-1)  # Assuming the last dimension is the embedding dimension
-            src = src * math.sqrt(d_model)
-            
-            # Transpose to match the transformer's expected input shape [seq_len, batch_size, feature_size]
-            src = src.transpose(0, 1)
-            
-            # Add positional encoding
-            src = self.positional_encoding(src)
-            
-            # Pass through Transformer Encoder
-            transformer_output = self.transformer_encoder(src)
-            
-            # Attention layer
-            attention_output, attention_weights = self.attention(transformer_output, transformer_output, transformer_output)
-            
-            # Squeeze the sequence length dimension and pass through the regression head
-            output = attention_output.squeeze(0)
-        else:
-            # Corrected forward path for fast=False
-            # Reshape the input to add a feature dimension properly
-            src = src.unsqueeze(1)  # Shape becomes [batch_size, 1, feature_size]
+        # First forward path for fast=True
+        # src shape is expected to be [batch_size, feature_size]
+        encoded, decoded = self.autoencoder(src)
+        src = encoded.unsqueeze(1)  # Add a sequence length dimension
+        d_model = src.size(-1)  # Assuming the last dimension is the embedding dimension
+        src = src * math.sqrt(d_model)
         
-            # Scale the embeddings according to the embedding dimension
-            src = src * math.sqrt(self.d_model)
+        # Transpose to match the transformer's expected input shape [seq_len, batch_size, feature_size]
+        src = src.transpose(0, 1)
         
-            # Transpose to match the transformer's expected input shape [seq_len, batch_size, feature_size]
-            src = src.transpose(0, 1)
+        # Add positional encoding
+        src = self.positional_encoding(src)
         
-            # Add positional encoding
-            src = self.positional_encoding(src)
+        # Pass through Transformer Encoder
+        transformer_output = self.transformer_encoder(src)
         
-            # Pass through Transformer Encoder
-            transformer_output = self.transformer_encoder(src)
+        # Attention layer
+        attention_output, attention_weights = self.attention(transformer_output, transformer_output, transformer_output)
         
-            # Attention layer
-            attention_output, attention_weights = self.attention(transformer_output, transformer_output, transformer_output)
-        
-            # Squeeze the sequence length dimension and pass through the regression head
-            output = attention_output.squeeze(0)
-
+        # Squeeze the sequence length dimension and pass through the regression head
+        output = attention_output.squeeze(0)
 
         regression_output = self.regressor(output)
 
@@ -201,22 +202,15 @@ class TransformerClassificationModel(nn.Module):
 
         return outputs
     
-def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, dropout=0.2, transform_df=True):
-    if transform_df:
-        table[MetadataColumn] = metadata.loc[metadata.index.isin(table.index)][MetadataColumn]
-        table = table.loc[table[MetadataColumn].notna()]
-        table = table.drop(columns=[MetadataColumn])
-        columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
-        df1 = table.drop(columns=columns_to_drop)
-        df1 = utils.clr_transformation(df1)
-        print('CLR Transformed.')
-        n_dimensions = n_dimensions
-        # # # # # # Preprocess with PCA (Re-using the PCA application code from earlier)
-        X1_reduced, pca1 = utils.apply_pca(df1, n_dimensions) 
-        df = pd.DataFrame(X1_reduced, index=df1.index)
-    else:
-        n_dimensions = table.shape[1]
-        df = table.copy()
+def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=128, feature_frequency=5, num_transformer_layers=1, nhead=8, dim_feedforward=2048, epochs=1000, learning_rate=5e-5, batch_size=512, dropout=0.2):
+    table[MetadataColumn] = metadata.loc[metadata.index.isin(table.index)][MetadataColumn]
+    table = table.loc[table[MetadataColumn].notna()]
+    table = table.drop(columns=[MetadataColumn])
+    columns_to_drop = table.columns[table.sum() < feature_frequency] #drop columns with low prev
+    df1 = table.drop(columns=columns_to_drop)
+    df = utils.clr_transformation(df1)
+    print('CLR Transformed.')
+    feat_size = df1.shape[1]
     df[MetadataColumn] = metadata.loc[metadata.index.isin(df.index)][MetadataColumn]
     df = df.loc[df[MetadataColumn].notna()]
 
@@ -251,12 +245,12 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    regression_model = trpca.TransformerRegressionModel(feature_size=n_dimensions, 
+    regression_model = trpca.TransformerRegressionModel(feature_size=feat_size, 
+                                                        n_dimensions=n_dimensions, 
                                                         num_transformer_layers=num_transformer_layers, 
                                                         nhead=nhead, 
                                                         dim_feedforward=dim_feedforward, 
-                                                        dropout=dropout, 
-                                                        fast_transformer=True)
+                                                        dropout=dropout)
     # Calculate the number of parameters
     total_params = sum(p.numel() for p in regression_model.parameters())
     trainable_params = sum(p.numel() for p in regression_model.parameters() if p.requires_grad)
