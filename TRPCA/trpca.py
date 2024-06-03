@@ -211,7 +211,6 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     df1 = utils.clr_transformation(df1)
     df = df1.copy()
     print('CLR Transformed.')
-    feat_size = df1.shape[1]
     df[MetadataColumn] = metadata.loc[metadata.index.isin(df1.index)][MetadataColumn]
     df = df.loc[df[MetadataColumn].notna()]
 
@@ -245,7 +244,7 @@ def trpca_regress(table, metadata, MetadataColumn, test_size=0.2, n_dimensions=1
     batch_size = batch_size # You can adjust the batch size
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
+    feat_size = X_pca_tensor.shape[1]
     regression_model = trpca.TransformerRegressionModel(feature_size=feat_size, 
                                                         autoencoder_hidden_size=n_dimensions, 
                                                         num_transformer_layers=num_transformer_layers, 
