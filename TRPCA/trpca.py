@@ -57,15 +57,19 @@ class PositionalEncoding(nn.Module):
         return x
   
 class TransformerRegressionModel(nn.Module):
-    def __init__(self, feature_size, num_transformer_layers=6, nhead=8, dim_feedforward=2048, dropout=0.4, hidden_layer_size=1024, autoencoder_hidden_size=256):
+    def __init__(self, feature_size, num_transformer_layers=6, nhead=8, dim_feedforward=2048, dropout=0.2, hidden_layer_size=1024, autoencoder_hidden_size=512):
         super(TransformerRegressionModel, self).__init__()
         self.d_model = feature_size
+        self.fast_transformer = fast_transformer
+        
+        # Sparse Autoencoder for dimensionality reduction
         self.autoencoder = SparseAutoencoder(input_size=feature_size, hidden_size=autoencoder_hidden_size)
+        # self.linear_reduction = nn.Linear(feature_size, autoencoder_hidden_size)
         # Positional Encoding
-        self.positional_encoding = PositionalEncoding(d_model=feature_size)
+        self.positional_encoding = PositionalEncoding(d_model=autoencoder_hidden_size)
         
         self.encoder_layer = nn.TransformerEncoderLayer(
-            d_model=feature_size,
+            d_model=autoencoder_hidden_size,
             nhead=nhead,
             dim_feedforward=dim_feedforward,
             dropout=dropout
@@ -73,24 +77,27 @@ class TransformerRegressionModel(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_transformer_layers)
         
         # Multi-head Attention
-        self.attention = nn.MultiheadAttention(embed_dim=feature_size, num_heads=nhead)
+        self.attention = nn.MultiheadAttention(embed_dim=autoencoder_hidden_size, num_heads=nhead)
         
         # Batch Normalization
-        self.batch_norm = nn.BatchNorm1d(feature_size)
+        self.batch_norm = nn.BatchNorm1d(autoencoder_hidden_size)
         
         # Regression head
         self.regressor = nn.Sequential(
-            nn.Linear(feature_size, hidden_layer_size),
+            nn.Linear(autoencoder_hidden_size, hidden_layer_size),
             nn.ReLU(),
             nn.Dropout(dropout),  # Dropout layer for regularization
             nn.Linear(hidden_layer_size, 1)
         )
 
     def forward(self, src, return_embeddings=True, return_attention=True):
+        # Apply sparse autoencoder
+        encoded, decoded = self.autoencoder(src)
+        # reduced_src = self.linear_reduction(src)
         # First forward path for fast=True
         # src shape is expected to be [batch_size, feature_size]
-        encoded, decoded = self.autoencoder(src)
         src = encoded.unsqueeze(1)  # Add a sequence length dimension
+        # src = reduced_src.unsqueeze(1)
         d_model = src.size(-1)  # Assuming the last dimension is the embedding dimension
         src = src * math.sqrt(d_model)
         
