@@ -60,7 +60,6 @@ class TransformerRegressionModel(nn.Module):
     def __init__(self, feature_size, num_transformer_layers=6, nhead=8, dim_feedforward=2048, dropout=0.2, hidden_layer_size=1024, autoencoder_hidden_size=512):
         super(TransformerRegressionModel, self).__init__()
         self.d_model = feature_size
-        self.fast_transformer = fast_transformer
         
         # Sparse Autoencoder for dimensionality reduction
         self.autoencoder = SparseAutoencoder(input_size=feature_size, hidden_size=autoencoder_hidden_size)
