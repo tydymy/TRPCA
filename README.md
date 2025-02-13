@@ -52,7 +52,7 @@ pip install matplotlib seaborn shap optuna tqdm
 ```bash
 git clone https://github.com/tydymy/TRPCA.git
 cd TRPCA
-git checkout dev_2
+git checkout trpca_v1
 ```
 
 2. Install in development mode:
