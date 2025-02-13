@@ -2,7 +2,6 @@
 
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)]()
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.8%2B-red)]()
-[![License](https://img.shields.io/badge/license-MIT-green)]()
 
 A PyTorch-based framework for analyzing microbiome data using normalized transformers with multi-task learning capabilities. This implementation includes both single-task regression and multi-task learning approaches, specifically designed for microbiome feature analysis.
 
@@ -206,17 +205,10 @@ If you use this framework in your research, please cite:
 
 ```bibtex
 @article{your-paper,
-    title={Your Paper Title},
-    author={Your Name},
-    journal={Journal Name},
-    year={2024}
+    title={NA},
+    author={NA},
+    journal={Pending},
+    year={2025}
 }
 ```
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is part of the TRPCA (Transformer-based Robust Principal Component Analysis) framework for microbiome data analysis.
