@@ -1,84 +1,222 @@
-# TRPCA
-## In progress:
-- Additional parameters for input: learning rate, batch size, etc.
-- Feature extraction for model predictions in a similar format to Qurro.
+# TRPCA: Transformer-based Robust Principal Component Analysis for Microbiome Data
 
-## Run in Google Colab
-Access the notebook [here](https://colab.research.google.com/drive/1XfSXCgnnrLq-FxiLTRVTDME458IyRDu-?usp=sharing).
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue)]()
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.8%2B-red)]()
+[![License](https://img.shields.io/badge/license-MIT-green)]()
 
-## Input/Output
-**Input:** `pd.DataFrame`, `pd.Series`
+A PyTorch-based framework for analyzing microbiome data using normalized transformers with multi-task learning capabilities. This implementation includes both single-task regression and multi-task learning approaches, specifically designed for microbiome feature analysis.
 
-**Output:**
-- Loss curves for train/test
-- Regression of predictions vs. actuals or classification confusion matrix
-- Best trained model checkpoint
+A PyTorch-based framework for analyzing microbiome data using normalized transformers with multi-task learning capabilities. This framework supports both single-task regression and multi-task learning (regression + classification) scenarios.
 
-## Usage Instructions
-1. Load `.biom`/`.qza` and metadata with the same index.
-2. Remove unwanted samples (i.e., samples with NA metadata).
-3. Apply RPCA or CLR+PCA transformation.
-4. Convert sample loadings or PCA results to a DataFrame.
-5. Add metadata to the DataFrame.
-6. Load DataFrame and metadata into train/test dataloaders.
+## 🌟 Features
 
-## Dependencies
-- biom-format
-- pytorch
-- pandas
-- numpy
-- sklearn
-- matplotlib
-- seaborn
-- tqdm
+- **Normalized Transformer Architecture**
+  - Custom transformer blocks with normalization layers
+  - Learnable scaling parameters for attention and MLP updates
+  - Positional encoding for sequence information
 
-## Note
-- Compatible with qiime2 environment with Gemelli installed for RPCA.
-- Apple Silicon Macs: MPS compatible PyTorch install may break qiime2 environment. This issue might not occur with CPU-only or CUDA-enabled devices.
+- **Multi-Task Learning Support**
+  - Joint regression and classification tasks
+  - Uncertainty-weighted loss functions
+  - Automatic task balancing during training
 
-## RPCA Analysis (rather than utils.clr_transformation and utils.apply_pca)
+- **Data Processing**
+  - Built-in support for microbiome data
+  - Robust preprocessing with RCLR transformation
+  - PCA dimensionality reduction
+  - Group-aware train/test splitting
 
-This section details the process of performing Robust Principal Component Analysis (RPCA) using `qiime2` and the `gemelli` plugin.
+- **Analysis Tools**
+  - Feature importance analysis using SHAP
+  - Performance visualization
+  - Comprehensive evaluation metrics
 
-```python
-import qiime2 as q2
-from qiime2.plugins.feature_table.methods import rarefy
-from qiime2.plugins.gemelli.actions import rpca
+## 📋 Prerequisites
 
-# Load the data
-table = q2.Artifact.load('data/skin_1975.qza')
+Before installing, ensure you have Python 3.8+ and PyTorch 1.8+ installed. Then install the following dependencies:
 
-# Rarefy the table to a uniform depth
-rare_table = rarefy(table=table, sampling_depth=1000)
+```bash
+# Core dependencies
+pip install torch numpy pandas scikit-learn
 
-# Define the number of dimensions for RPCA
-n_dimensions = 8
+# Microbiome analysis
+pip install biom-format
+pip install gemelli
 
-# Execute RPCA
-rpca_results = rpca(rare_table.rarefied_table, n_components=n_dimensions, min_feature_frequency=5)
-
-# Convert the biplot results to a DataFrame
-df = rpca_results.biplot.view(q2.Metadata).to_dataframe()
-
+# Visualization and analysis
+pip install matplotlib seaborn shap optuna tqdm
 ```
 
+## 🛠️ Installation
 
-## Parameters
-### Descriptions and Recommended Values
-| Parameter             | Description                                      | Recommended Values                               |
-|-----------------------|--------------------------------------------------|--------------------------------------------------|
-| `n_dimensions`        | Number of principal components; must be a power of 2 | 8, 16, 32, 64, 128, 256, 512                     |
-| `epochs`              | Number of times the model iterates through the training data | 1000+ (observe loss curves for diagnosis)        |
-| `learning_rate`       | Size of step the model takes to adjust based on what it has learned | 1e-03, 1e-04, 1e-05                              |
-| `batch_size`          | Number of samples per batch                     | 32, 64, 128, 256, 512                             |
-| `num_transformer_layers` | Number of transformer encoder layers          | 1, 3, 6, 12                                       |
-| `nhead`               | Number of attention heads                       | 4, 8, 16                                          |
-| `dim_feedforward`     | Layer size for feedforward layer                | 1024, 2048                                        |
+1. Clone the repository:
+```bash
+git clone https://github.com/tydymy/TRPCA.git
+cd TRPCA
+git checkout dev_2
+```
 
-### Parameters Based on Sample Size
-- **<100 samples**
-  - `{'n_dimensions': 8-32, 'learning_rate': 1e-05, 'batch_size': 16, 'num_transformer_layers': 1-3, 'nhead': 4-8, 'dim_feedforward': 1024}`
-- **100-1000 samples**
-  - `{'n_dimensions': 8-256, 'learning_rate': 1e-03, 'batch_size': 128, 'num_transformer_layers': 1-3, 'nhead': 8-16, 'dim_feedforward': 1024-2048}`
-- **1000+ samples**
-  - `{'n_dimensions': 8-512, 'learning_rate': 1e-03, 'batch_size': 128-512, 'num_transformer_layers': 3-12, 'nhead': 8-16, 'dim_feedforward': 1024-2048}`
+2. Install in development mode:
+```bash
+pip install -e .
+```
+
+## 🚀 Quick Start
+
+### Single-Task Regression
+
+```python
+import pandas as pd
+from TRPCA.utils import preprocess, train_model, predict_and_evaluate
+
+# Load your data
+df = pd.read_csv('your_feature_table.csv', index_col=0)
+target = pd.read_csv('your_metadata.csv', index_col=0)['target_column']
+
+# Set model parameters
+model_params = {
+    'input_dim': 48,
+    'hidden_dim': 256,
+    'num_layers': 1,
+    'output_dim': 1,
+    'projection_dim': 4
+}
+
+# Preprocess data
+train_loader, test_loader, pca = preprocess(
+    df=df,
+    series=target,
+    num_pcs=48,
+    test_split=0.1,
+    batch_size=128
+)
+
+# Train model
+model, history, training_fig = train_model(
+    train_loader=train_loader,
+    model_params=model_params,
+    num_epochs=1000,
+    device='cuda' if torch.cuda.is_available() else 'cpu',
+    use_optuna=True
+)
+
+# Evaluate
+metrics, predictions, eval_fig = predict_and_evaluate(
+    model=model,
+    test_loader=test_loader,
+    device='cuda' if torch.cuda.is_available() else 'cpu'
+)
+```
+
+### Multi-Task Learning
+
+```python
+from TRPCA.utils import preprocess_mtl, train_model_mtl, predict_and_evaluate_mtl
+
+# Load data for both tasks
+regression_target = metadata['continuous_variable']
+classification_target = metadata['categorical_variable']
+
+# Define parameters
+model_params = {
+    'input_dim': 256,
+    'hidden_dim': 256,
+    'num_layers': 1,
+    'num_classes': n_classes,
+    'output_dim': 1,
+    'projection_dim': 4
+}
+
+# Preprocess
+train_loader, test_loader, pca, label_encoder = preprocess_mtl(
+    df=df,
+    reg_series=regression_target,
+    cls_series=classification_target,
+    num_pcs=256,
+    test_split=0.1,
+    batch_size=128
+)
+
+# Train
+model, history, training_fig = train_model_mtl(
+    train_loader=train_loader,
+    model_params=model_params,
+    num_epochs=1000,
+    device='cuda' if torch.cuda.is_available() else 'cpu'
+)
+
+# Evaluate
+metrics, predictions, eval_fig = predict_and_evaluate_mtl(
+    model=model,
+    test_loader=test_loader,
+    label_encoder=label_encoder,
+    device='cuda' if torch.cuda.is_available() else 'cpu'
+)
+```
+
+## 📊 Model Architecture
+
+### Normalized Transformer
+- **Input Processing**: PCA-reduced features are projected to a higher dimension
+- **View Generation**: Creates multiple views of the data for robust learning
+- **Transformer Blocks**: Self-attention with normalization and learnable scaling
+- **Output Heads**: Task-specific layers for regression and classification
+
+### Multi-Task Learning
+- **Shared Backbone**: Common feature extraction through transformer layers
+- **Uncertainty Weighting**: Automatic task balancing using learnable parameters
+- **Task-Specific Heads**: Separate outputs for regression and classification
+
+## 🔍 Advanced Features
+
+### Feature Importance Analysis
+```python
+from TRPCA.utils import analyze_features
+
+results = analyze_features(
+    model=model,
+    train_loader=train_loader,
+    test_loader=test_loader,
+    pca=pca,
+    original_features=df.columns
+)
+
+# Access results
+feature_importance = results['feature_importance_df']
+sample_importance = results['sample_importance_df']
+```
+
+### Model Comparison
+```python
+from TRPCA.utils import compare_regressors
+
+results, comparison_plot = compare_regressors(
+    X=df,
+    y=target,
+    train_loader=train_loader,
+    test_loader=test_loader,
+    pca=pca,
+    regressors=regressors
+)
+```
+
+## 📝 Citation
+
+If you use this framework in your research, please cite:
+
+```bibtex
+@article{your-paper,
+    title={Your Paper Title},
+    author={Your Name},
+    journal={Journal Name},
+    year={2024}
+}
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is part of the TRPCA (Transformer-based Robust Principal Component Analysis) framework for microbiome data analysis.
